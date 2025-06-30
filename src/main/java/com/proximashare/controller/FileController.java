@@ -29,6 +29,10 @@ public class FileController {
 
   @PostMapping("/upload")
   public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+    if (file.isEmpty()) {
+      return ResponseEntity.badRequest().body(Map.of("message", "File is missing"));
+    }
+    
     FileMetadata metadata = fileService.uploadFile(file);
 
     Map<String, String> response = Map.of(
