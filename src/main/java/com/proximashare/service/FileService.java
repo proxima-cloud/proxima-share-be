@@ -1,14 +1,16 @@
 package com.proximashare.service;
 
-import com.proximashare.entity.FileMetadata;
-import com.proximashare.repository.FileMetadataRepository;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.proximashare.entity.FileMetadata;
+import com.proximashare.repository.FileMetadataRepository;
 
 @Service
 public class FileService {
@@ -63,17 +65,22 @@ public class FileService {
     return fileMetadataRepository.save(metadata);
   }
 
-  public FileMetadata getFileMetadata(String uuid) {
+  public FileMetadata getFileMetadata(String uuid) throws FileNotFoundException {
     FileMetadata metadata = fileMetadataRepository.findById(uuid)
-        .orElseThrow(() -> new IllegalArgumentException("File not found or expired"));
+        .orElseThrow(() -> new FileNotFoundException("File not found or expired"));
     if (metadata.getExpiryDate().isBefore(LocalDateTime.now())) {
       throw new IllegalArgumentException("File expired");
     }
     return metadata;
   }
 
-  public File downloadFile(String uuid) {
+  public File downloadFile(String uuid) throws FileNotFoundException, IllegalAccessException {
     FileMetadata metadata = getFileMetadata(uuid);
+
+    if (metadata.getDownloadCount() > 3) {
+      throw new IllegalAccessException("File download limit reached for this file. (Max. 3 Times)");
+    }
+
     metadata.setDownloadCount(metadata.getDownloadCount() + 1);
     fileMetadataRepository.save(metadata);
     String originalFilename = metadata.getFilename();

@@ -1,16 +1,22 @@
 package com.proximashare.controller;
 
-import com.proximashare.entity.FileMetadata;
-import com.proximashare.service.FileService;
-
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Map;
 
 // import org.springframework.boot.autoconfigure.web.ServerProperties.Tomcat.Resource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.proximashare.entity.FileMetadata;
+import com.proximashare.service.FileService;
 
 @RestController
 @RequestMapping("/api/files")
@@ -34,12 +40,12 @@ public class FileController {
   }
 
   @GetMapping("/{uuid}")
-  public ResponseEntity<FileMetadata> getFileMetadata(@PathVariable String uuid) {
+  public ResponseEntity<FileMetadata> getFileMetadata(@PathVariable String uuid) throws FileNotFoundException {
     return ResponseEntity.ok(fileService.getFileMetadata(uuid));
   }
 
   @GetMapping("/download/{uuid}")
-  public ResponseEntity<FileSystemResource> downloadFile(@PathVariable String uuid) {
+  public ResponseEntity<FileSystemResource> downloadFile(@PathVariable String uuid) throws FileNotFoundException, IllegalAccessException {
     File file = fileService.downloadFile(uuid);
     FileMetadata metadata = fileService.getFileMetadata(uuid);
 
