@@ -19,7 +19,7 @@ import com.proximashare.entity.FileMetadata;
 import com.proximashare.service.FileService;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/public/files")
 public class FileController {
   private final FileService fileService;
 

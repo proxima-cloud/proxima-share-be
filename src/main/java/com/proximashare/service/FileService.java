@@ -29,10 +29,6 @@ public class FileService {
       throw new IllegalArgumentException("File size exceeds 1GB");
     }
 
-    if (file.getSize() > 1_250_000) { // 10MB limit
-      throw new IllegalArgumentException("File size exceeds 10MB");
-    }
-
     String uuid = UUID.randomUUID().toString();
 
     while (fileMetadataRepository.existsById(uuid)) {
