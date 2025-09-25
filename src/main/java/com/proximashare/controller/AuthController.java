@@ -1,7 +1,9 @@
 package com.proximashare.controller;
 
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,12 +11,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.proximashare.dto.RegistrationRequest;
 import com.proximashare.entity.Role;
 import com.proximashare.entity.User;
 import com.proximashare.repository.RoleRepository;
 import com.proximashare.repository.UserRepository;
 import com.proximashare.service.JwtService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,12 +31,22 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/register")
-    public String register(@RequestBody Map<String, String> request) {
-        Role userRole = roleRepo.findByName("ROLE_USER");
+    public String register(@Valid @RequestBody RegistrationRequest request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+        List<String> roleNames = request.getRoles();
+
+        Set<Role> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            Role role = roleRepo.findByName(roleName)
+                    .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+            roles.add(role);
+        }
+
         User user = new User();
-        user.setUsername(request.get("username"));
-        user.setPassword(passwordEncoder.encode(request.get("password")));
-        user.setRoles(Collections.singleton(userRole));
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRoles(roles);
         userRepo.save(user);
         return "User registered";
     }

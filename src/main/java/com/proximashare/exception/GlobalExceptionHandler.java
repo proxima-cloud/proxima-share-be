@@ -1,7 +1,8 @@
-package com.proximashare.app;
+package com.proximashare.exception;
 
 import java.io.FileNotFoundException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,7 +18,8 @@ public class GlobalExceptionHandler {
     // Helper method to determine if stack trace should be included
     // @Value("${app.error.include-stacktrace}")
     // private boolean includeStackTrace;
-    private boolean isProductionEnvironment = false; // Set to true for production deployments
+    @Value("${app.environment.production:false}")
+    private boolean isProductionEnvironment;
 
     /**
      * Handles FileNotFoundException, returning HTTP 404 (NOT_FOUND).
