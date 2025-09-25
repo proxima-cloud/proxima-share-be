@@ -1,6 +1,5 @@
 package com.proximashare.app.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,11 +21,12 @@ import com.proximashare.repository.UserRepository;
 @Configuration
 public class SecurityConfig {
 
-  @Autowired
-  private UserDetailsService userDetailsService;
-
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter)
+  public SecurityFilterChain securityFilterChain(
+      HttpSecurity http,
+      JwtAuthenticationFilter jwtFilter,
+      UserDetailsService userDetailsService
+    )
       throws Exception {
     return http
         .csrf(csrf -> csrf.disable())
