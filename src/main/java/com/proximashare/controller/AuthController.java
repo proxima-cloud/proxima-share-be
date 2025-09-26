@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,7 +53,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody Map<String, String> request) {
+    public Map<String, Object> login(@RequestBody Map<String, String> request) {
         User user = userRepo.findByUsername(request.get("username"))
                 .orElseThrow(() -> new RuntimeException("Invalid username"));
         if (!passwordEncoder.matches(request.get("password"), user.getPassword())) {
@@ -60,6 +61,13 @@ public class AuthController {
         }
 
         String token = jwtService.generateToken(Map.of("roles", user.getRoles()), user.getUsername());
-        return Map.of("token", token);
+        return Map.of(
+            "token", token,
+            "username", user.getUsername(),
+            "roles", user.getRoles()
+                    .stream()
+                    .map(r -> r.getName())
+                    .collect(Collectors.toList())
+        );
     }
 }
