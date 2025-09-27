@@ -66,7 +66,7 @@ public class AuthController {
             "username", user.getUsername(),
             "roles", user.getRoles()
                     .stream()
-                    .map(r -> r.getName())
+                    .map(Role::getName)
                     .collect(Collectors.toList())
         );
     }
