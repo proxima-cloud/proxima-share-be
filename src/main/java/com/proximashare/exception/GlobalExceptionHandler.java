@@ -16,8 +16,9 @@ import com.proximashare.dto.ErrorDetails;
 public class GlobalExceptionHandler {
 
     // Helper method to determine if stack trace should be included
-    // @Value("${app.error.include-stacktrace}")
-    // private boolean includeStackTrace;
+    @Value("${app.error.include-stacktrace}")
+    private boolean includeStackTrace;
+
     @Value("${app.environment.production:false}")
     private boolean isProductionEnvironment;
 
@@ -28,7 +29,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FileNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleFileNotFoundException(FileNotFoundException e) {
         // Only include stack trace if not in production or for specific debugging
-        ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), isProductionEnvironment ? null : getStackTraceAsString(e));
+        ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDetails);
     }
 
@@ -38,7 +39,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorDetails> handleIllegalArgumentException(IllegalArgumentException e) {
-        ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), isProductionEnvironment ? null : getStackTraceAsString(e));
+        ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
     }
 
@@ -48,7 +49,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(IllegalAccessException.class)
     public ResponseEntity<ErrorDetails> handleIllegalAccessException(IllegalAccessException e) {
-        ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), isProductionEnvironment ? null : getStackTraceAsString(e));
+        ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDetails);
     }
 
@@ -61,7 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorDetails> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
         // Provide a user-friendly message for file size limit
         String errorMessage = "File size exceeds the maximum allowed limit. Please upload a file smaller than 1GB.";
-        ErrorDetails errorDetails = new ErrorDetails(errorMessage, isProductionEnvironment ? null : getStackTraceAsString(e));
+        ErrorDetails errorDetails = new ErrorDetails(errorMessage, (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
     }
 
@@ -79,12 +80,27 @@ public class GlobalExceptionHandler {
         // Determine message and stack trace exposure based on environment
         String userMessage = isProductionEnvironment ?
                 "An unexpected error occurred. Please try again later." :
-                "An unexpected server error occurred: " + e.getMessage();
+                (includeStackTrace ? "An unexpected server error occurred: " + e.getMessage() :
+                        "An unexpected error occurred. Please try again later.");
 
-        String stackTrace = isProductionEnvironment ? null : getStackTraceAsString(e);
+        String stackTrace = (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null;
 
         ErrorDetails errorDetails = new ErrorDetails(userMessage, stackTrace);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDetails);
+    }
+
+    /**
+     * Handles MissingServletRequestPartException, returning HTTP 400 (BAD_REQUEST).
+     * This occurs when a required multipart file parameter is missing.
+     */
+    @ResponseBody
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorDetails> handleMissingServletRequestPart(
+            org.springframework.web.multipart.support.MissingServletRequestPartException e) {
+        String errorMessage = "Required file parameter is missing. Please provide a file to upload.";
+        ErrorDetails errorDetails = new ErrorDetails(errorMessage,
+                (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDetails);
     }
 
     // Helper method to get stack trace as a string

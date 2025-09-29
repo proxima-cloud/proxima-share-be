@@ -14,75 +14,78 @@ import com.proximashare.repository.FileMetadataRepository;
 
 @Service
 public class FileService {
-  private final FileMetadataRepository fileMetadataRepository;
-  private final String storagePath;
+    private final FileMetadataRepository fileMetadataRepository;
+    private final String storagePath;
 
-  public FileService(FileMetadataRepository fileMetadataRepository,
-      @Value("${file.storage.path}") String storagePath) {
-    this.fileMetadataRepository = fileMetadataRepository;
-    this.storagePath = storagePath;
-  }
-
-  @SuppressWarnings("null")
-  public FileMetadata uploadFile(MultipartFile file) {
-    if (file.getSize() > 1_073_741_824) { // 1GB limit
-      throw new IllegalArgumentException("File size exceeds 1GB");
+    public FileService(FileMetadataRepository fileMetadataRepository,
+                       @Value("${file.storage.path}") String storagePath) {
+        this.fileMetadataRepository = fileMetadataRepository;
+        this.storagePath = storagePath;
     }
 
-    String uuid = UUID.randomUUID().toString();
+    @SuppressWarnings("null")
+    public FileMetadata uploadFile(MultipartFile file) {
+        if (file.getSize() > 1_073_741_824) { // 1GB limit
+            throw new IllegalArgumentException("File size exceeds 1GB");
+        }
 
-    while (fileMetadataRepository.existsById(uuid)) {
-      uuid = UUID.randomUUID().toString();
+        String uuid = UUID.randomUUID().toString();
+
+        while (fileMetadataRepository.existsById(uuid)) {
+            uuid = UUID.randomUUID().toString();
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.trim().isEmpty()) {
+            originalFilename = "unknown";
+        }
+
+        String extension = "";
+        if (originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String storedFilename = uuid + extension; // e.g., 550e8400-e29b-41d4-a716-446655440000.txt
+        File targetFile = new File(storagePath, storedFilename);
+
+        try {
+            file.transferTo(targetFile);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to store file", e);
+        }
+
+        FileMetadata metadata = new FileMetadata(
+                uuid,
+                originalFilename,
+                file.getSize(),
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(3),
+                0);
+
+        return fileMetadataRepository.save(metadata);
     }
 
-    String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown";
-
-    String extension = "";
-    if (originalFilename.contains(".")) {
-        extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-    }
-    String storedFilename = uuid + extension; // e.g., 550e8400-e29b-41d4-a716-446655440000.txt
-    File targetFile = new File(storagePath, storedFilename);
-
-    try {
-      file.transferTo(targetFile);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to store file", e);
+    public FileMetadata getFileMetadata(String uuid) throws FileNotFoundException {
+        FileMetadata metadata = fileMetadataRepository.findById(uuid)
+                .orElseThrow(() -> new FileNotFoundException("File not found or expired"));
+        if (metadata.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("File expired");
+        }
+        return metadata;
     }
 
-    FileMetadata metadata = new FileMetadata(
-        uuid,
-        file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown",
-        file.getSize(),
-        LocalDateTime.now(),
-        LocalDateTime.now().plusDays(3),
-        0);
+    public File downloadFile(String uuid) throws FileNotFoundException, IllegalAccessException {
+        FileMetadata metadata = getFileMetadata(uuid);
 
-    return fileMetadataRepository.save(metadata);
-  }
+        if (metadata.getDownloadCount() > 3) {
+            throw new IllegalAccessException("File download limit reached for this file. (Max. 3 Times)");
+        }
 
-  public FileMetadata getFileMetadata(String uuid) throws FileNotFoundException {
-    FileMetadata metadata = fileMetadataRepository.findById(uuid)
-        .orElseThrow(() -> new FileNotFoundException("File not found or expired"));
-    if (metadata.getExpiryDate().isBefore(LocalDateTime.now())) {
-      throw new IllegalArgumentException("File expired");
+        metadata.setDownloadCount(metadata.getDownloadCount() + 1);
+        fileMetadataRepository.save(metadata);
+        String originalFilename = metadata.getFilename();
+        String extension = originalFilename.contains(".") ?
+                originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+        return new File(storagePath, uuid + extension);
     }
-    return metadata;
-  }
-
-  public File downloadFile(String uuid) throws FileNotFoundException, IllegalAccessException {
-    FileMetadata metadata = getFileMetadata(uuid);
-
-    if (metadata.getDownloadCount() > 3) {
-      throw new IllegalAccessException("File download limit reached for this file. (Max. 3 Times)");
-    }
-
-    metadata.setDownloadCount(metadata.getDownloadCount() + 1);
-    fileMetadataRepository.save(metadata);
-    String originalFilename = metadata.getFilename();
-    String extension = originalFilename.contains(".") ? 
-                      originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
-    return new File(storagePath, uuid + extension);
-  }
 
 }

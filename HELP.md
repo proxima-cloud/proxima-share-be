@@ -1,28 +1,41 @@
 # Getting Started
 
 ### File Structure
+```
 src/main/java/com/proximashare/
 ├── app/
 │   ├── config/
-|   │   └── CorsConfig.java
+|   │   ├── CorsConfig.java
 |   │   └── SecurityConfig.java
-│   ├── ProximaShareApplication.java
-│   └── GlobalExceptionHandler.java
+│   ├── security/
+|   │   ├──JwtAuthenticationFilter.java
+|   │   └── UserDetailsImpl.java
+│   └── ProximaShareApplication.java
 ├── entity/
+│   ├── User.java
+│   ├── Role.java
 │   └── FileMetadata.java
+├── exception/
+│   ├── ValidationExceptionsHandler.java
+│   └── GlobalExceptionHandler.java
 ├── repository/
 │   └── FileMetadataRepository.java
 ├── service/
+│   ├── initializers/
+|   │   ├── AdminInitializer.java  # To create first admin user
+|   │   └── RoleInitializer.java  # To create roles (runs before admin)
 │   ├── FileService.java
 │   └── FileCleanupScheduler.java
 ├── controller/
-│   └── FileController.java
+│   ├── AuthController.java   # /login and /register
+│   └── FileController.java   # /public/download and /public/upload
 ├── dto/
+│   ├── RegistrationRequest
 │   └── ErrorDetails.java
 src/main/resources/
 ├── application.properties
 └── build.gradle.kts
-
+```
 
 ### Reference Documentation
 For further reference, please consider the following sections:
