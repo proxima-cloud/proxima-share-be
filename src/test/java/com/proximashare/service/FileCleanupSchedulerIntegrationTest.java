@@ -1,13 +1,11 @@
 package com.proximashare.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.awaitility.Awaitility.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.AfterEach;

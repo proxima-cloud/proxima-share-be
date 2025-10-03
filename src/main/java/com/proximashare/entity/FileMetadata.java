@@ -39,6 +39,16 @@ public class FileMetadata {
     public int getDownloadCount() { return downloadCount; }
     public void setDownloadCount(int downloadCount) { this.downloadCount = downloadCount; }
 
+    @Override
+    public String toString() {
+        return "uuid = " + getUuid()
+                + "Filename = " + getFilename()
+                + "Size = " + getSize()
+                + "UploadDate = " + getUploadDate()
+                + "ExpiryDate = " + getExpiryDate()
+                + "DownloadCount = " + getDownloadCount();
+    }
+
 }
 
 
