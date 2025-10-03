@@ -14,9 +14,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class ProximaShareApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ProximaShareApplication.class, args);
-		System.out.println("ProximaShare Application Started Successfully!");
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ProximaShareApplication.class, args);
+        System.out.println("ProximaShare Application Started Successfully!");
+    }
 
 }
