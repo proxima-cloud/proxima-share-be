@@ -116,7 +116,7 @@ class AuthControllerIntegrationTest {
         String responseBody = loginResult.getResponse().getContentAsString();
         @SuppressWarnings("unchecked")
         Map<String, Object> response = objectMapper.readValue(responseBody, Map.class);
-        String token = (String) ((Map<String,Object>) response.get("data")).get("token");
+        String token = (String) ((Map<String, Object>) response.get("data")).get("token");
 
         assertThat(token).isNotNull();
         assertThat(token).isNotEmpty();
@@ -139,6 +139,7 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isOk());
+        long count1 = userRepository.count();
 
         // Try to register with same username
         RegistrationRequest request2 = new RegistrationRequest();
@@ -152,9 +153,8 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
 
         // Verify only one user exists
-        long count = userRepository.count();
-
-        assertThat(count).isLessThanOrEqualTo(3); // May include admin user from initializer
+        long count2 = userRepository.count();
+        assertThat(count1).isEqualTo(count2);
     }
 
     @Test
@@ -203,7 +203,7 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").exists());
     }
 

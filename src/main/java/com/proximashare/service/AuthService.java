@@ -38,6 +38,10 @@ public class AuthService {
         List<String> roleNames = request.getRoles();
         Set<Role> roles = new HashSet<>();
         for (String roleName : roleNames) {
+            if ("ROLE_ADMIN".equalsIgnoreCase(roleName)) {
+                throw new IllegalArgumentException("Admin role cannot be assigned during registration.");
+            }
+
             Role role = roleRepository.findByName(roleName)
                     .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
             roles.add(role);

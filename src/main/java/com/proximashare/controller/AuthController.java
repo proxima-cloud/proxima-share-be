@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import com.proximashare.dto.ApiResponse;
 import com.proximashare.dto.UserData;
 import com.proximashare.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth Controller", description = "This controller provides login and user registration endpoints")
 public class AuthController {
     private final UserRepository userRepo;
     private final RoleRepository roleRepo;
@@ -32,20 +35,24 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    @Operation(summary = "Register user with role ROLE_USER in 'RegistrationRequest' format",
+            description = "Returns UserData of registered user inside 'data' key")
     @PostMapping("/register")
     public ApiResponse<UserData> register(@Valid @RequestBody RegistrationRequest request) {
         User user = authService.registerUser(request);
         UserData userData = UserData.fromUser(user);
-        return new ApiResponse<>(userData,"User registered successfully");
+        return new ApiResponse<>(userData, "User registered successfully");
     }
 
+    @Operation(summary = "Login registered user with username and password",
+            description = "Returns token, id, username and roles inside 'data' key.")
     @PostMapping("/login")
     public ApiResponse<Map<String, Object>> login(@RequestBody Map<String, String> request) {
         User user = userRepo.findByUsername(request.get("username"))
-                .orElseThrow(() -> new RuntimeException("Invalid username"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username"));
 
         if (!passwordEncoder.matches(request.get("password"), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new IllegalArgumentException("Invalid password");
         }
 
         String token = jwtService.generateToken(Map.of("roles", user.getRoles()), user.getUsername());

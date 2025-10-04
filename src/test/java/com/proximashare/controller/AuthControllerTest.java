@@ -344,7 +344,7 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("Should return 500 when username not found")
+        @DisplayName("Should return 400 when username not found while login")
         void shouldReturnErrorWhenUsernameNotFound() throws Exception {
             // Arrange
             Map<String, String> loginRequest = Map.of(
@@ -358,7 +358,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
-                    .andExpect(status().isInternalServerError())
+                    .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").exists());
 
             verify(userRepository).findByUsername("nonexistent");
@@ -367,7 +367,7 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("Should return 500 when password is incorrect")
+        @DisplayName("Should return 400 when password is incorrect")
         void shouldReturnErrorWhenPasswordIncorrect() throws Exception {
             // Arrange
             Map<String, String> loginRequest = Map.of(
@@ -382,7 +382,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
-                    .andExpect(status().isInternalServerError())
+                    .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").exists());
 
             verify(userRepository).findByUsername("testuser");
@@ -458,7 +458,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
-                    .andExpect(status().is5xxServerError());
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -475,7 +475,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
-                    .andExpect(status().is5xxServerError());
+                    .andExpect(status().isBadRequest());
         }
     }
 }
