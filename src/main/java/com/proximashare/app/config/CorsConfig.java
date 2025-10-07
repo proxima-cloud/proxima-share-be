@@ -15,10 +15,13 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://proximacloud.in",
-                                        "https://www.proximacloud.in",
-                                        "https://share.proximacloud.in",
-                                        "https://share-proxima.vercel.app")
+                        .allowedOrigins(
+//                                "http://localhost:5173",
+//                                "https://share-proxima.vercel.app",
+                                "https://proximacloud.in",
+                                "https://www.proximacloud.in",
+                                "https://share.proximacloud.in"
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

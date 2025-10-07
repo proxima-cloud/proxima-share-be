@@ -1,14 +1,16 @@
 # Getting Started
 
 ### File Structure
+
 ```
 src/main/java/com/proximashare/
 ├── app/
 │   ├── config/
+|   │   ├── FileUploadConfig.java
 |   │   ├── CorsConfig.java
 |   │   └── SecurityConfig.java
 │   ├── security/
-|   │   ├──JwtAuthenticationFilter.java
+|   │   ├── JwtAuthenticationFilter.java
 |   │   └── UserDetailsImpl.java
 │   └── ProximaShareApplication.java
 ├── entity/
@@ -19,15 +21,22 @@ src/main/java/com/proximashare/
 │   ├── ValidationExceptionsHandler.java
 │   └── GlobalExceptionHandler.java
 ├── repository/
+│   ├── UserRepository.java
+│   ├── RoleRepository.java
 │   └── FileMetadataRepository.java
 ├── service/
 │   ├── initializers/
 |   │   ├── AdminInitializer.java  # To create first admin user
 |   │   └── RoleInitializer.java  # To create roles (runs before admin)
 │   ├── FileService.java
+│   ├── AuthService.java
+│   ├── JwtService.java
 │   └── FileCleanupScheduler.java
 ├── controller/
 │   ├── AuthController.java   # /login and /register
+│   ├── ConfigController.java   # /api/public/config/roles
+│   ├── UserController.java   # /user/change_password
+│   ├── UserFileController.java   # /user/download and /user/upload
 │   └── FileController.java   # /public/download and /public/upload
 ├── dto/
 │   ├── RegistrationRequest
@@ -38,6 +47,7 @@ src/main/resources/
 ```
 
 ### Reference Documentation
+
 For further reference, please consider the following sections:
 
 * [Official Gradle documentation](https://docs.gradle.org)
@@ -50,6 +60,7 @@ For further reference, please consider the following sections:
 * [Validation](https://docs.spring.io/spring-boot/3.3.13/reference/io/validation.html)
 
 ### Guides
+
 The following guides illustrate how to use some features concretely:
 
 * [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
@@ -60,6 +71,7 @@ The following guides illustrate how to use some features concretely:
 * [Validation](https://spring.io/guides/gs/validating-form-input/)
 
 ### Additional Links
+
 These additional references should also help you:
 
 * [Gradle Build Scans – insights for your project's build](https://scans.gradle.com#gradle)
