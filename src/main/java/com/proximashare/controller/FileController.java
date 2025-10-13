@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.Map;
 
 // import org.springframework.boot.autoconfigure.web.ServerProperties.Tomcat.Resource;
+import com.proximashare.dto.FileMetadataResponse;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,42 +20,43 @@ import com.proximashare.entity.FileMetadata;
 import com.proximashare.service.FileService;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/public/files")
 public class FileController {
-  private final FileService fileService;
+    private final FileService fileService;
 
-  public FileController(FileService fileService) {
-    this.fileService = fileService;
-  }
-
-  @PostMapping("/upload")
-  public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
-    if (file.isEmpty()) {
-      return ResponseEntity.badRequest().body(Map.of("message", "File is missing"));
+    public FileController(FileService fileService) {
+        this.fileService = fileService;
     }
-    
-    FileMetadata metadata = fileService.uploadFile(file);
 
-    Map<String, String> response = Map.of(
-        "uuid", metadata.getUuid()
-        //, "link", "http://localhost:8080/api/files/download/" + metadata.getUuid()
-      );
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "File is missing"));
+        }
 
-    return ResponseEntity.ok(response);
-  }
+        FileMetadata metadata = fileService.uploadFile(file);
 
-  @GetMapping("/{uuid}")
-  public ResponseEntity<FileMetadata> getFileMetadata(@PathVariable String uuid) throws FileNotFoundException {
-    return ResponseEntity.ok(fileService.getFileMetadata(uuid));
-  }
+        Map<String, String> response = Map.of(
+                "uuid", metadata.getUuid()
+                //, "link", "http://localhost:8080/api/files/download/" + metadata.getUuid()
+        );
 
-  @GetMapping("/download/{uuid}")
-  public ResponseEntity<FileSystemResource> downloadFile(@PathVariable String uuid) throws FileNotFoundException, IllegalAccessException {
-    File file = fileService.downloadFile(uuid);
-    FileMetadata metadata = fileService.getFileMetadata(uuid);
+        return ResponseEntity.ok(response);
+    }
 
-    return ResponseEntity.ok()
-        .header("Content-Disposition", "attachment; filename=\"" + metadata.getFilename() + "\"")
-        .body(new FileSystemResource(file));
-  }
+    @GetMapping("/{uuid}")
+    public ResponseEntity<FileMetadataResponse> getFileMetadata(@PathVariable String uuid) throws FileNotFoundException {
+        FileMetadata metadata = fileService.getFileMetadata(uuid);
+        return ResponseEntity.ok(FileMetadataResponse.from(metadata));
+    }
+
+    @GetMapping("/download/{uuid}")
+    public ResponseEntity<FileSystemResource> downloadFile(@PathVariable String uuid) throws FileNotFoundException, IllegalAccessException {
+        File file = fileService.downloadFile(uuid);
+        FileMetadata metadata = fileService.getFileMetadata(uuid);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + metadata.getFilename() + "\"")
+                .body(new FileSystemResource(file));
+    }
 }
