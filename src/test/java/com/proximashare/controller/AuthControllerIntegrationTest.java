@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import com.jayway.jsonpath.JsonPath;
+import com.proximashare.ProximaShareApplication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ import com.proximashare.repository.RoleRepository;
 import com.proximashare.repository.UserRepository;
 import com.proximashare.service.JwtService;
 
-@SpringBootTest(classes = com.proximashare.app.ProximaShareApplication.class)
+@SpringBootTest(classes = ProximaShareApplication.class)
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("AuthController Integration Tests")

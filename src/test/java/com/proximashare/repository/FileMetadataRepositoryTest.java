@@ -1,7 +1,9 @@
 package com.proximashare.repository;
 
-import com.proximashare.app.ProximaShareApplication;
+import com.proximashare.ProximaShareApplication;
+
 import static org.assertj.core.api.Assertions.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.proximashare.entity.FileMetadata;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(classes = com.proximashare.app.ProximaShareApplication.class)
+@SpringBootTest(classes = ProximaShareApplication.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @Transactional
 @DisplayName("FileMetadataRepository Integration Tests")

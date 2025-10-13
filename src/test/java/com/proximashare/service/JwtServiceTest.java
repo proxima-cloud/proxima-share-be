@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.proximashare.ProximaShareApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,10 +16,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.TestPropertySource;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 
-@SpringBootTest(classes = com.proximashare.app.ProximaShareApplication.class)
+@SpringBootTest(classes = ProximaShareApplication.class)
 @TestPropertySource(properties = {
         "application.security.jwt.secret=testSecretKeyForJwtTokenGenerationAndValidationTesting123456",
         "application.security.jwt.expiration=3600000" // 1 hour

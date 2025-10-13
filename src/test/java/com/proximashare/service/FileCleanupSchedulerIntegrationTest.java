@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
+import com.proximashare.ProximaShareApplication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ import org.springframework.test.context.TestPropertySource;
 import com.proximashare.entity.FileMetadata;
 import com.proximashare.repository.FileMetadataRepository;
 
-@SpringBootTest(classes = com.proximashare.app.ProximaShareApplication.class)
+@SpringBootTest(classes = ProximaShareApplication.class)
 @EnableScheduling
 @TestPropertySource(properties = {
         "file.storage.path=${java.io.tmpdir}/scheduler-integration-test",
