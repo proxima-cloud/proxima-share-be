@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.proximashare.dto.ApiResponse;
+import com.proximashare.dto.GoogleLoginRequest;
 import com.proximashare.dto.UserData;
 import com.proximashare.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,5 +68,34 @@ public class AuthController {
         data.put("token", token);
 
         return new ApiResponse<>(data, "Logged in successfully");
+    }
+
+    @Operation(summary = "Login with Google OAuth",
+            description = "Automatically creates account on first login. Returns user data and JWT token inside 'data' key")
+    @PostMapping("/login/google")
+    public ApiResponse<Map<String, Object>> loginWithGoogle(@Valid @RequestBody GoogleLoginRequest request) {
+        // Login or create user
+        User user = authService.loginOrRegisterGoogleUser(request.getIdToken());
+
+        // Generate JWT token
+        String token = jwtService.generateToken(
+                Map.of("roles", user.getRoles()),
+                user.getUsername()
+        );
+
+        // Prepare response
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", user.getId());
+        data.put("username", user.getUsername());
+        data.put("email", user.getEmail());
+        data.put("profilePictureUrl", user.getProfilePictureUrl());
+        data.put("authProvider", user.getAuthProvider());
+        data.put("roles", user.getRoles()
+                .stream()
+                .map(Role::getName)
+                .collect(Collectors.toList()));
+        data.put("token", token);
+
+        return new ApiResponse<>(data, "Logged in successfully with Google");
     }
 }

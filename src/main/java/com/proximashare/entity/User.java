@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Check;
 
 @Entity
 @Table(name = "\"user\"")
@@ -23,7 +24,20 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(unique = true)
+    private String googleId;
+
+    @Column(unique = true)
+    private String email;
+
+    private Boolean emailVerified;
+
+    private String profilePictureUrl;
+
     @Column(nullable = false)
+    private String authProvider; // "LOCAL", "GOOGLE", etc.
+
+    //    @Column(nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
