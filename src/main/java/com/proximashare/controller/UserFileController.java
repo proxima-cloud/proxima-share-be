@@ -7,6 +7,7 @@ import com.proximashare.repository.UserRepository;
 import com.proximashare.service.FileService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/user/files")
+@RequestMapping("/user/files")
 public class UserFileController {
     private final FileService fileService;
     private final UserRepository userRepository;
@@ -39,6 +40,10 @@ public class UserFileController {
             return ResponseEntity.badRequest().body(Map.of("message", "File is missing"));
         }
 
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Authentication required"));
+        }
+
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -55,6 +60,15 @@ public class UserFileController {
     @GetMapping
     public ResponseEntity<List<FileMetadataResponse>> getUserFiles(
             @AuthenticationPrincipal UserDetails userDetails) {
+
+        if (userDetails == null) {
+            throw new AuthenticationException("Authentication required") {
+                @Override
+                public String getMessage() {
+                    return super.getMessage();
+                }
+            };
+        }
 
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -92,7 +106,11 @@ public class UserFileController {
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Map<String, String>> deleteFile(
             @PathVariable String uuid,
-            @AuthenticationPrincipal UserDetails userDetails) throws FileNotFoundException {
+            @AuthenticationPrincipal UserDetails userDetails) throws FileNotFoundException, IllegalAccessException {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Authentication required"));
+        }
 
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
