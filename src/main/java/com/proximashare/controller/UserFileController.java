@@ -40,10 +40,6 @@ public class UserFileController {
             return ResponseEntity.badRequest().body(Map.of("message", "File is missing"));
         }
 
-        if (userDetails == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "Authentication required"));
-        }
-
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -60,15 +56,6 @@ public class UserFileController {
     @GetMapping
     public ResponseEntity<List<FileMetadataResponse>> getUserFiles(
             @AuthenticationPrincipal UserDetails userDetails) {
-
-        if (userDetails == null) {
-            throw new AuthenticationException("Authentication required") {
-                @Override
-                public String getMessage() {
-                    return super.getMessage();
-                }
-            };
-        }
 
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -93,10 +80,18 @@ public class UserFileController {
 
     @GetMapping("/download/{uuid}")
     public ResponseEntity<FileSystemResource> downloadFile(
-            @PathVariable String uuid) throws FileNotFoundException, IllegalAccessException {
+            @PathVariable String uuid,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) throws FileNotFoundException, IllegalAccessException, UsernameNotFoundException {
 
         File file = fileService.downloadFile(uuid);
         FileMetadata metadata = fileService.getFileMetadata(uuid);
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!(metadata.getOwner().equals(user) || metadata.isPublic())) {
+            throw new IllegalAccessException("Not authorized to download this file");
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=\"" + metadata.getFilename() + "\"")
@@ -107,10 +102,6 @@ public class UserFileController {
     public ResponseEntity<Map<String, String>> deleteFile(
             @PathVariable String uuid,
             @AuthenticationPrincipal UserDetails userDetails) throws FileNotFoundException, IllegalAccessException {
-
-        if (userDetails == null) {
-            return ResponseEntity.status(401).body(Map.of("message", "Authentication required"));
-        }
 
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
