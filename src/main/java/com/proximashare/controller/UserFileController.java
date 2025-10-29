@@ -86,10 +86,23 @@ public class UserFileController {
 
         File file = fileService.downloadFile(uuid);
         FileMetadata metadata = fileService.getFileMetadata(uuid);
+
+        // Allow download if file is public
+        if (metadata.isPublic()) {
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + metadata.getFilename() + "\"")
+                    .body(new FileSystemResource(file));
+        }
+
+        // For non-public files, check ownership
+        if (userDetails == null) {
+            throw new IllegalAccessException("Authentication required to download this file");
+        }
+
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!(metadata.getOwner().equals(user) || metadata.isPublic())) {
+        if (!metadata.getOwner().equals(user)) {
             throw new IllegalAccessException("Not authorized to download this file");
         }
 

@@ -70,6 +70,7 @@ class UserFileControllerTest {
     private JwtService jwtService;
 
     private User testUser;
+    private User tempUser;
     private FileMetadata testFileMetadata;
 
     @BeforeEach
@@ -81,7 +82,7 @@ class UserFileControllerTest {
         testFileMetadata.setFilename("test-file.txt");
         testFileMetadata.setFilename("test-file.txt");
         testFileMetadata.setSize(1024L);
-//        testFileMetadata.set("text/plain"); // TODO need to add column for mime type in DB
+        testFileMetadata.setMimeType("text/plain");
         testFileMetadata.setUploadDate(LocalDateTime.now());
         testFileMetadata.setDownloadCount(0);
         testFileMetadata.setOwner(testUser);
@@ -301,8 +302,8 @@ class UserFileControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.uuid").value("test-uuid-123"))
                     .andExpect(jsonPath("$.filename").value("test-file.txt"))
-                    .andExpect(jsonPath("$.size").value(1024));
-//                    .andExpect(jsonPath("$.mimeType").value("text/plain"));
+                    .andExpect(jsonPath("$.size").value(1024))
+                    .andExpect(jsonPath("$.mimeType").value("text/plain"));
 
             verify(fileService).getFileMetadata("test-uuid-123");
         }
@@ -394,6 +395,25 @@ class UserFileControllerTest {
             verify(fileService).downloadFile("test-uuid-123");
         }
 
+        @Test
+        @WithMockUser(username = "testFileUploader", roles = {"USER"})
+        @DisplayName("Should allow other users download when file is set as public")
+        void shouldAllowAnonymousDownload() throws Exception {
+            // Arrange
+            tempUser = TestAuthHelper.createTestUser("testFileDownloader", "password123", "ROLE_USER");
+            File tempFile = File.createTempFile("test", ".txt");
+            tempFile.deleteOnExit();
+            testFileMetadata.setPublic(true);
+            testFileMetadata.setOwner(tempUser);
+            when(fileService.downloadFile("test-uuid-123")).thenReturn(tempFile);
+            when(fileService.getFileMetadata("test-uuid-123")).thenReturn(testFileMetadata);
+
+            // Act & Assert
+            mockMvc.perform(get("/user/files/download/{uuid}", "test-uuid-123"))
+                    .andExpect(status().isOk());
+
+            verify(fileService).downloadFile("test-uuid-123");
+        }
     }
 
     @Nested

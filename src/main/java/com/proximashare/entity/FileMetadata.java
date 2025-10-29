@@ -14,6 +14,7 @@ public class FileMetadata {
     private String uuid;
     private String filename;
     private long size;
+    private String mimeType;
     private LocalDateTime uploadDate;
     private LocalDateTime expiryDate;
     private int downloadCount;

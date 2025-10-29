@@ -1,10 +1,14 @@
 package com.proximashare.dto;
 
 import com.proximashare.entity.FileMetadata;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 public class FileMetadataResponse {
     private String uuid;
     private String filename;
@@ -14,6 +18,7 @@ public class FileMetadataResponse {
     private int downloadCount;
     private boolean isPublic;
     private String ownerUsername;  // Only username, not entire User object
+    private String mimeType;
 
     public FileMetadataResponse() {
     }
@@ -28,6 +33,7 @@ public class FileMetadataResponse {
         response.expiryDate = metadata.getExpiryDate();
         response.downloadCount = metadata.getDownloadCount();
         response.isPublic = metadata.isPublic();
+        response.mimeType = metadata.getMimeType();
 
         if (metadata.getOwner() != null && Hibernate.isInitialized(metadata.getOwner())) {
             response.ownerUsername = metadata.getOwner().getUsername();
@@ -38,68 +44,4 @@ public class FileMetadataResponse {
         return response;
     }
 
-    // Getters and Setters
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public void setSize(long size) {
-        this.size = size;
-    }
-
-    public LocalDateTime getUploadDate() {
-        return uploadDate;
-    }
-
-    public void setUploadDate(LocalDateTime uploadDate) {
-        this.uploadDate = uploadDate;
-    }
-
-    public LocalDateTime getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(LocalDateTime expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public int getDownloadCount() {
-        return downloadCount;
-    }
-
-    public void setDownloadCount(int downloadCount) {
-        this.downloadCount = downloadCount;
-    }
-
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    public void setPublic(boolean isPublic) {
-        this.isPublic = isPublic;
-    }
-
-    public String getOwnerUsername() {
-        return ownerUsername;
-    }
-
-    public void setOwnerUsername(String ownerUsername) {
-        this.ownerUsername = ownerUsername;
-    }
 }

@@ -11,7 +11,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Check;
 
 @Entity
-@Table(name = "\"user\"")
+@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

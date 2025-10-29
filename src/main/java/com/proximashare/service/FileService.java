@@ -49,6 +49,7 @@ public class FileService {
                 LocalDateTime.now().plusDays(uploadConfig.getPublicExpiryDays()),
                 0);
         metadata.setPublic(true);  // Mark as public
+        metadata.setMimeType(file.getContentType());
 
         return fileMetadataRepository.save(metadata);
     }
@@ -76,6 +77,7 @@ public class FileService {
                 0,
                 user,
                 false);  // Not public, owned by user
+        metadata.setMimeType(file.getContentType());
 
         return fileMetadataRepository.save(metadata);
     }
