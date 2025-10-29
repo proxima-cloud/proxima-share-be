@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 import com.proximashare.ProximaShareApplication;
+import com.proximashare.config.TestSecurityConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import com.proximashare.entity.FileMetadata;
@@ -24,9 +27,10 @@ import com.proximashare.repository.FileMetadataRepository;
 
 @SpringBootTest(classes = ProximaShareApplication.class)
 @EnableScheduling
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 @TestPropertySource(properties = {
-        "file.storage.path=${java.io.tmpdir}/scheduler-integration-test",
-        "app.environment.production=false"
+        "file.storage.path=${java.io.tmpdir}/scheduler-integration-test"
 })
 @DisplayName("FileCleanupScheduler Integration Tests")
 class FileCleanupSchedulerIntegrationTest {
@@ -40,19 +44,16 @@ class FileCleanupSchedulerIntegrationTest {
     @TempDir
     Path tempDir;
 
-    private String storagePath;
-
     @BeforeEach
     void setUp() throws Exception {
-        storagePath = tempDir.toString();
-
         // Update storage path using reflection
         var field = FileCleanupScheduler.class.getDeclaredField("storagePath");
         field.setAccessible(true);
-        field.set(fileCleanupScheduler, storagePath);
+        field.set(fileCleanupScheduler, tempDir.toString());
 
         // Clean up any existing test data
         fileMetadataRepository.deleteAll();
+        fileMetadataRepository.flush();
     }
 
     @AfterEach
@@ -68,7 +69,7 @@ class FileCleanupSchedulerIntegrationTest {
         String validUuid = "integration-valid-uuid";
 
         // Create expired file
-        FileMetadata expiredMetadata = new FileMetadata(
+        FileMetadata expiredMetadata = createFileMetadata(
                 expiredUuid,
                 "expired-integration.txt",
                 100L,
@@ -81,7 +82,7 @@ class FileCleanupSchedulerIntegrationTest {
         fileMetadataRepository.save(expiredMetadata);
 
         // Create valid file
-        FileMetadata validMetadata = new FileMetadata(
+        FileMetadata validMetadata = createFileMetadata(
                 validUuid,
                 "valid-integration.txt",
                 100L,
@@ -162,14 +163,48 @@ class FileCleanupSchedulerIntegrationTest {
         assertThat(fileMetadataRepository.findAll()).isEmpty();
     }
 
+    @Test
+    @DisplayName("Should handle files expiring exactly now")
+    void shouldHandleFilesExpiringNow() throws IOException {
+        // Arrange
+        FileMetadata justExpired = createAndSaveExpiredFile("just-expired", "just-expired.txt",
+                LocalDateTime.now().minusSeconds(1));
+
+        assertThat(fileMetadataRepository.count()).isEqualTo(1);
+
+        // Act
+        fileCleanupScheduler.cleanupExpiredFiles();
+
+        // Assert
+        assertThat(fileMetadataRepository.count()).isEqualTo(0);
+    }
+
     // Helper methods
+    private FileMetadata createFileMetadata(String uuid, String filename, Long size,
+                                            LocalDateTime uploadDate, LocalDateTime expiryDate,
+                                            Integer downloadCount) {
+        FileMetadata metadata = new FileMetadata();
+        metadata.setUuid(uuid);
+        metadata.setFilename(filename);
+        metadata.setSize(size);
+        metadata.setUploadDate(uploadDate);
+        metadata.setExpiryDate(expiryDate);
+        metadata.setDownloadCount(downloadCount);
+        return metadata;
+    }
+
     private FileMetadata createAndSaveExpiredFile(String uuid, String filename) throws IOException {
-        FileMetadata metadata = new FileMetadata(
+        return createAndSaveExpiredFile(uuid, filename, LocalDateTime.now().minusDays(1));
+    }
+
+    private FileMetadata createAndSaveExpiredFile(String uuid, String filename,
+                                                  LocalDateTime expiryDate) throws IOException {
+        FileMetadata metadata = createFileMetadata(
                 uuid,
                 filename,
                 100L,
                 LocalDateTime.now().minusDays(5),
-                LocalDateTime.now().minusDays(1),
+                expiryDate,
                 0
         );
 
@@ -180,7 +215,7 @@ class FileCleanupSchedulerIntegrationTest {
     }
 
     private FileMetadata createAndSaveValidFile(String uuid, String filename) throws IOException {
-        FileMetadata metadata = new FileMetadata(
+        FileMetadata metadata = createFileMetadata(
                 uuid,
                 filename,
                 100L,

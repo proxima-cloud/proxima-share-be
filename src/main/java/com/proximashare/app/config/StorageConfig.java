@@ -3,10 +3,12 @@ package com.proximashare.app.config;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.io.File;
 
 @Configuration
+@Profile("!test")
 public class StorageConfig {
 
     @Value("${file.storage.path}")

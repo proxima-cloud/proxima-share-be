@@ -6,19 +6,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.proximashare.ProximaShareApplication;
+import com.proximashare.config.TestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import io.jsonwebtoken.MalformedJwtException;
 
 @SpringBootTest(classes = ProximaShareApplication.class)
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 @TestPropertySource(properties = {
         "application.security.jwt.secret=testSecretKeyForJwtTokenGenerationAndValidationTesting123456",
         "application.security.jwt.expiration=3600000" // 1 hour
