@@ -1,5 +1,6 @@
 package com.proximashare.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -8,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Check;
 
 @Entity
@@ -30,7 +32,12 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    private Boolean emailVerified;
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
+
+    private String emailVerificationToken;
+
+    private LocalDateTime tokenExpiryDate; // Token expiration timestamp
 
     private String profilePictureUrl;
 
@@ -40,12 +47,16 @@ public class User {
     //    @Column(nullable = false)
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @Column(nullable = false)
+    private Boolean active = true;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+//    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Role> roles;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)

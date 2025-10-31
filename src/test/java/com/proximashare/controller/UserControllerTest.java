@@ -7,6 +7,7 @@ import com.proximashare.entity.User;
 import com.proximashare.exception.GlobalExceptionHandler;
 import com.proximashare.repository.UserRepository;
 import com.proximashare.service.JwtService;
+import com.proximashare.service.UserService;
 import com.proximashare.utils.TestAuthHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -47,6 +49,9 @@ class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private UserService userService;
 
     @MockBean
     private UserRepository userRepository;

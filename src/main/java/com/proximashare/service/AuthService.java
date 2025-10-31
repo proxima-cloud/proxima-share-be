@@ -42,7 +42,12 @@ public class AuthService {
             throw new IllegalArgumentException("Username is already taken");
         }
 
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered, Please login or forgot password.");
+        }
+
         String username = request.getUsername();
+        String email = request.getEmail();
         String password = request.getPassword();
 
         List<String> roleNames = request.getRoles();
@@ -60,9 +65,12 @@ public class AuthService {
         // Proceed with registration
         User user = new User();
         user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setAuthProvider("LOCAL");
         user.setRoles(roles);
+        user.setEmailVerified(false);
+        user.setActive(false);
         userRepository.save(user);
         return user;
     }
@@ -100,6 +108,8 @@ public class AuthService {
         user.setProfilePictureUrl(picture);
         user.setPassword(null);
         user.setAuthProvider("GOOGLE");
+        user.setEmailVerified(true); // Google emails are pre-verified
+        user.setActive(true);
 
         // Assign default ROLE_USER
         Role userRole = roleRepository.findByName("ROLE_USER")

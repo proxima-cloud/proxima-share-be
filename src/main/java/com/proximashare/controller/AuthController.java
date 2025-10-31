@@ -52,6 +52,11 @@ public class AuthController {
         User user = userRepo.findByUsername(request.get("username"))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username"));
 
+        // Check if user is Google account
+        if ("GOOGLE".equalsIgnoreCase(user.getAuthProvider())) {
+            throw new IllegalArgumentException("Google accounts cannot be logged in with username and password");
+        }
+
         if (!passwordEncoder.matches(request.get("password"), user.getPassword())) {
             throw new IllegalArgumentException("Invalid password");
         }
@@ -65,6 +70,8 @@ public class AuthController {
                 .stream()
                 .map(Role::getName)
                 .collect(Collectors.toList()));
+        data.put("active", user.getActive());
+        data.put("emailVerified", user.getEmailVerified());
         data.put("token", token);
 
         return new ApiResponse<>(data, "Logged in successfully");

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public class UserData {
     private final Long id;
     private final String username;
+    private final String email;
     private final Set<String> roles;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)  // for ignoring the null fields
@@ -21,6 +22,8 @@ public class UserData {
     public UserData(User user) {
         this.id = user.getId();
         this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.profilePicture = user.getProfilePictureUrl();
         this.roles = user.getRoles()
                 .stream()
                 .map(Role::getName)

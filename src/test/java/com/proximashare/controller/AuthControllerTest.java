@@ -96,6 +96,7 @@ class AuthControllerTest {
             // Arrange
             RegistrationRequest request = new RegistrationRequest();
             request.setUsername("newuser");
+            request.setEmail("newuser@email.com");
             request.setPassword("password123");
             request.setRoles(List.of("USER"));
 
@@ -103,6 +104,7 @@ class AuthControllerTest {
             User savedUser = new User();
             savedUser.setId(1L);
             savedUser.setUsername("newuser");
+            savedUser.setEmail("newuser@email.com");
             savedUser.setPassword("$2a$10$encodedpassword");
             Set<Role> roles = new HashSet<>();
             roles.add(userRole);
@@ -133,12 +135,14 @@ class AuthControllerTest {
             // Arrange
             RegistrationRequest request = new RegistrationRequest();
             request.setUsername("adminuser");
+            request.setEmail("adminuser@email.com");
             request.setPassword("password123");
             request.setRoles(List.of("USER", "ADMIN"));
 
             User savedUser = new User();
             savedUser.setId(2L);
             savedUser.setUsername("adminuser");
+            savedUser.setEmail("adminuser@email.com");
             savedUser.setPassword("$2a$10$encodedpassword");
             Set<Role> roles = new HashSet<>();
             roles.add(userRole);
@@ -221,6 +225,7 @@ class AuthControllerTest {
             // Arrange
             RegistrationRequest request = new RegistrationRequest();
             request.setUsername("existinguser");
+            request.setEmail("existinguser@email.com");
             request.setPassword("password123");
             request.setRoles(List.of("USER"));
 
@@ -243,6 +248,7 @@ class AuthControllerTest {
             // Arrange
             RegistrationRequest request = new RegistrationRequest();
             request.setUsername("newuser");
+            request.setEmail("newuser@email.com");
             request.setPassword("password123");
             request.setRoles(List.of("INVALID_ROLE"));
 

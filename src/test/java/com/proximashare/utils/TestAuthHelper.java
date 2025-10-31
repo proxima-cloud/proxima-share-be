@@ -13,9 +13,12 @@ public class TestAuthHelper {
         User user = new User();
         user.setId(1L);
         user.setUsername(username);
+        user.setEmail(username + "@test.com");
         user.setPassword(new BCryptPasswordEncoder().encode(password));
         user.setAuthProvider("LOCAL");
         user.setEmail(username + "@test.com");
+        user.setEmailVerified(true);
+        user.setActive(true);
 
         Set<Role> roles = new HashSet<>();
         for (String roleName : roleNames) {
