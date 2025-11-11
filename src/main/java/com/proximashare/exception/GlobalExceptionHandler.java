@@ -7,6 +7,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -27,7 +29,7 @@ public class GlobalExceptionHandler {
     /**
      * Handles FileNotFoundException, returning HTTP 404 (NOT_FOUND).
      */
-    @ExceptionHandler(FileNotFoundException.class)
+    @ExceptionHandler({FileNotFoundException.class})
     public ResponseEntity<ErrorDetails> handleFileNotFoundException(FileNotFoundException e) {
         // Only include stack trace if not in production or for specific debugging
         ErrorDetails errorDetails = new ErrorDetails(e.getMessage(), (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
@@ -97,12 +99,33 @@ public class GlobalExceptionHandler {
      * Handles HttpMessageNotReadableException, returning HTTP 500 (INTERNAL_SERVER_ERROR).
      * Provides a more user-friendly error message for FE dev.
      */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ExceptionHandler({HttpMessageNotReadableException.class, UsernameNotFoundException.class})
     public ResponseEntity<ErrorDetails> HandleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         // Provide a user-friendly message for file size limit
         String errorMessage = "Invalid Json format, check the post request body.";
         ErrorDetails errorDetails = new ErrorDetails(errorMessage, (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDetails);
+    }
+
+    /**
+     * Handles UnauthenticatedException, returning HTTP 401 (UNAUTHORIZED).
+     */
+    @ExceptionHandler(UnauthenticatedException.class)
+    public ResponseEntity<ErrorDetails> handleUnauthenticatedException(UnauthenticatedException e) {
+        String errorMessage = e.getMessage() != null ? e.getMessage() : "Authentication required";
+        ErrorDetails errorDetails = new ErrorDetails(errorMessage, (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorDetails);
+    }
+
+    /**
+     * Handles AuthenticationException, returning HTTP 401 (UNAUTHORIZED).
+     * Provides a more user-friendly error message for FE dev.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorDetails> HandleAuthenticationException(AuthenticationException e) {
+        String errorMessage = "Authentication required.";
+        ErrorDetails errorDetails = new ErrorDetails(errorMessage, (!isProductionEnvironment && includeStackTrace) ? getStackTraceAsString(e) : null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorDetails);
     }
 
     /**
@@ -115,7 +138,7 @@ public class GlobalExceptionHandler {
         System.err.println("An unhandled error occurred: " + e.getMessage());
         e.printStackTrace(); // Log full stack trace internally
 
-        // Determine message and stack trace exposure based on environment
+        // Determine message and stack trace exposure based on the environment
         String userMessage = isProductionEnvironment ?
                 "An unexpected error occurred. Please try again later." :
                 (includeStackTrace ? "An unexpected server error occurred: " + e.getMessage() :

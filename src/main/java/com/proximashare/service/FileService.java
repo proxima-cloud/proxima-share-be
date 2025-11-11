@@ -49,6 +49,7 @@ public class FileService {
                 LocalDateTime.now().plusDays(uploadConfig.getPublicExpiryDays()),
                 0);
         metadata.setPublic(true);  // Mark as public
+        metadata.setMimeType(file.getContentType());
 
         return fileMetadataRepository.save(metadata);
     }
@@ -76,6 +77,7 @@ public class FileService {
                 0,
                 user,
                 false);  // Not public, owned by user
+        metadata.setMimeType(file.getContentType());
 
         return fileMetadataRepository.save(metadata);
     }
@@ -86,9 +88,15 @@ public class FileService {
     }
 
     // Delete file with ownership check
-    public void deleteUserFile(String uuid, User user) throws FileNotFoundException {
+    public void deleteUserFile(String uuid, User user) throws FileNotFoundException, IllegalAccessException {
         FileMetadata metadata = fileMetadataRepository.findByUuidAndOwner(uuid, user)
                 .orElseThrow(() -> new FileNotFoundException("File not found or you don't own this file"));
+
+        // Optional: Add actual authorization check that could throw IllegalAccessException
+        // For example, if you want to add admin-only deletion restrictions:
+        // if (metadata.isLocked() && !user.isAdmin()) {
+        //     throw new IllegalAccessException("Not authorized to delete this file");
+        // }
 
         // Delete physical file
         String extension = getFileExtension(metadata.getFilename());

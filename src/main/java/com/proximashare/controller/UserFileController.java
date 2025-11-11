@@ -7,6 +7,7 @@ import com.proximashare.repository.UserRepository;
 import com.proximashare.service.FileService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/user/files")
+@RequestMapping("/user/files")
 public class UserFileController {
     private final FileService fileService;
     private final UserRepository userRepository;
@@ -79,10 +80,31 @@ public class UserFileController {
 
     @GetMapping("/download/{uuid}")
     public ResponseEntity<FileSystemResource> downloadFile(
-            @PathVariable String uuid) throws FileNotFoundException, IllegalAccessException {
+            @PathVariable String uuid,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) throws FileNotFoundException, IllegalAccessException, UsernameNotFoundException {
 
         File file = fileService.downloadFile(uuid);
         FileMetadata metadata = fileService.getFileMetadata(uuid);
+
+        // Allow download if file is public
+        if (metadata.isPublic()) {
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + metadata.getFilename() + "\"")
+                    .body(new FileSystemResource(file));
+        }
+
+        // For non-public files, check ownership
+        if (userDetails == null) {
+            throw new IllegalAccessException("Authentication required to download this file");
+        }
+
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!metadata.getOwner().equals(user)) {
+            throw new IllegalAccessException("Not authorized to download this file");
+        }
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=\"" + metadata.getFilename() + "\"")
@@ -92,7 +114,7 @@ public class UserFileController {
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Map<String, String>> deleteFile(
             @PathVariable String uuid,
-            @AuthenticationPrincipal UserDetails userDetails) throws FileNotFoundException {
+            @AuthenticationPrincipal UserDetails userDetails) throws FileNotFoundException, IllegalAccessException {
 
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

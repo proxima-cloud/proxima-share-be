@@ -1,13 +1,18 @@
-package com.proximashare.app.config;
+package com.proximashare.config;
 
+import com.proximashare.app.security.JwtAuthenticationFilter;
+import com.proximashare.app.security.UserDetailsImpl;
+import com.proximashare.repository.UserRepository;
+import com.proximashare.service.JwtService;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,33 +20,39 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.proximashare.app.security.JwtAuthenticationFilter;
-import com.proximashare.app.security.UserDetailsImpl;
-import com.proximashare.repository.UserRepository;
-
-@Configuration
-@Profile("!test")
-public class SecurityConfig {
+@TestConfiguration
+@EnableWebSecurity
+@EnableMethodSecurity
+@Profile("test")
+public class TestSecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
+    @Primary
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    //    @Bean
+//    @Primary
+//    public JwtAuthenticationFilter jwtAuthenticationFilter(
+//            JwtService jwtService,
+//            UserDetailsService userDetailsService
+//    ) {
+//        return new JwtAuthenticationFilter(jwtService, userDetailsService);
+//    }
+//
+    @Bean
+    @Primary
+    public SecurityFilterChain testSecurityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtFilter,
             UserDetailsService userDetailsService
-    )
-            throws Exception {
+    ) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/webjars/**"
-                        ).permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        // .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated())
@@ -52,27 +63,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
+    @Primary
+    public UserDetailsService testUserDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByUsername(username)
                 .map(UserDetailsImpl::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
+    @Primary
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 }

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 
 @Service
 @DependsOn("roleInitializer")
+@Profile("!test")
 public class AdminInitializer {
 
     @Autowired
@@ -49,6 +51,7 @@ public class AdminInitializer {
             adminUser.setUsername(adminUsername);
             adminUser.setPassword(passwordEncoder.encode(adminPassword)); // default password (change in prod!)
             adminUser.setRoles(Collections.singleton(adminRole));
+            adminUser.setAuthProvider("LOCAL");
 
             userRepository.save(adminUser);
             System.out.println("Default admin user created: username='admin' password='admin123'");

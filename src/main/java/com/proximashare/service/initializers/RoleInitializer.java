@@ -1,6 +1,7 @@
 package com.proximashare.service.initializers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import com.proximashare.entity.Role;
@@ -9,6 +10,7 @@ import com.proximashare.repository.RoleRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
+@Profile("!test")
 public class RoleInitializer {
     @Autowired
     private RoleRepository roleRepository;
